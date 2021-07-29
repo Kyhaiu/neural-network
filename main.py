@@ -1,4 +1,5 @@
 import neural_network as nn
+import matrix as mat
 
 
 class Main():
@@ -7,12 +8,10 @@ class Main():
         pass
 
     def test(self):
-        rna = nn.NeuralNetwork()
-        rna.neural_network(3, 2, 1)
-        matrix = rna.matrix(2, 2)
-        print(matrix)
-        matrix = rna.add_scale(matrix)
-        print(matrix)
+        matrix = mat.matrix(2, 3)
+        print(matrix.data)
+        matrix.data = matrix.randomize(matrix.data)
+        print(matrix.data)
 
 
 main = Main()
