@@ -2,6 +2,7 @@ import typing
 
 import numpy as np
 from random import uniform
+from numpy.core.fromnumeric import shape
 from numpy.matrixlib import mat
 
 
@@ -9,8 +10,8 @@ class matrix:
 
     def __init__(self,  rows: int, cols: int) -> None:
         """
-            Construtor da classe matrix.
-            Cria uma matriz de tamanho mXn preenchida com valores 1.
+            Construtor da classe Matrix.
+            Cria uma matriz(mxn) preenchida com valores 0.
             ---
             Parametros:
                 * rows: Integer - Numero de linhas da matriz.
@@ -22,11 +23,11 @@ class matrix:
         """
         self.rows = rows
         self.cols = cols
-        self.data = np.ones((rows, cols))
+        self.data = np.zeros((rows, cols))
 
     def __setattr__(self, name: str, value: typing.Any) -> None:
         """
-            Definição de atributos da classe matrix
+            Definição de atributos da classe Matrix
 
             ---
             Atributos:
@@ -43,28 +44,22 @@ class matrix:
         if name == 'data':
             super(matrix, self).__setattr__(name, value)
 
-    def randomize(self, matrix: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def from_array(input_array: typing.List[float]) -> np.ndarray:
         """
-            Função que preenche a matriz gerada com valores aleatórios entre -1 e 1
+            Função que converte um array em um numpy.ndarray.
+            Normalmente usada para receber inputs do usuário através de um array,
+            e converte em um numpy.ndarray de 1-d.
 
             ---
             Parametros:
-                * Matrix: numpy.ndarray - Matriz(mxn) que será randomizada.
+                * input_array: List of float - Array que contem os dados.
 
             ---
             Retorno:
-                * Matrix: numpy.ndarray - Matriz(mxn) randomizada.
+                * Array: 1-d numpy.ndarray - Array convertido em um ndarray de 1-d.
         """
-        i = 0
-        j = 0
-        while i < matrix.shape[0]:
-            j = 0
-            while j < matrix.shape[1]:
-                matrix[i][j] = uniform(-1, 1)
-                j += 1
-            i += 1
-        del i, j
-        return matrix
+        return np.array(input_array)
 
     def mul_scale(self, matrix: np.ndarray, scalar) -> np.ndarray:
         """
@@ -79,8 +74,7 @@ class matrix:
             Retorno:
                 * Matriz: numpy.ndarray - Matriz(mxn) escalonada.
         """
-
-        return np.multiply(matrix, scalar)
+        matrix.data = np.multiply(matrix.data, scalar)
 
     def add_scale(self, matrix: np.ndarray, scalar) -> np.ndarray:
         """
@@ -95,7 +89,7 @@ class matrix:
             Retorno:
                 * Matriz: numpy.ndarray - Matriz(mxn) escalonada.
         """
-        return np.add(matrix, scalar)
+        matrix.data = np.add(matrix.data, scalar)
 
     def mat_mul(self, matrixA: np.ndarray, matrixB: np.ndarray) -> np.ndarray:
         """
@@ -110,7 +104,7 @@ class matrix:
             Retorno:
                 * Matrix: numpy.ndarray - Matriz(mxn)
         """
-        return np.matmul(matrixA, matrixB)
+        return np.matmul(matrixA.data, matrixB.data)
 
     def transpose(self, matrix: np.ndarray) -> np.ndarray:
         """
@@ -124,4 +118,26 @@ class matrix:
             Retorno:
                 * matrix: numpy.ndarray - Matriz(nxm).
         """
-        return matrix.T
+        return matrix.data.T
+
+    def randomize(self) -> None:
+        """
+            Função que preenche a matriz gerada com valores aleatórios entre -1 e 1
+
+            ---
+            Parametros:
+                * None - Não possui parametros.
+
+            ---
+            Retorno:
+                * None - Não possui retorno pois trabalha com referencia.
+        """
+        i = 0
+        j = 0
+        while i < self.rows:
+            j = 0
+            while j < self.cols:
+                self.data[i][j] = uniform(-1, 1)
+                j += 1
+            i += 1
+        del i, j

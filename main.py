@@ -9,8 +9,8 @@ class Main():
 
     def test(self):
         matrix = mat.matrix(2, 3)
-        print(matrix.data)
-        matrix.data = matrix.randomize(matrix.data)
+
+        matrix.add_scale(matrix.data, 3)
         print(matrix.data)
 
 
