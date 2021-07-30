@@ -44,82 +44,6 @@ class matrix:
         if name == 'data':
             super(matrix, self).__setattr__(name, value)
 
-    @staticmethod
-    def from_array(input_array: typing.List[float]) -> np.ndarray:
-        """
-            Função que converte um array em um numpy.ndarray.
-            Normalmente usada para receber inputs do usuário através de um array,
-            e converte em um numpy.ndarray de 1-d.
-
-            ---
-            Parametros:
-                * input_array: List of float - Array que contem os dados.
-
-            ---
-            Retorno:
-                * Array: 1-d numpy.ndarray - Array convertido em um ndarray de 1-d.
-        """
-        return np.array(input_array)
-
-    def mul_scale(self, matrix: np.ndarray, scalar) -> np.ndarray:
-        """
-            Função que realiza a operação Elementwise de multiplicação na matriz
-
-            ---
-            Parametros:
-                * matrix: numpy.ndarray - Matriz(nxm).
-                * scalar: Integer or numpy.ndarray - Escalar que a matriz será multiplicada.
-
-            ---
-            Retorno:
-                * Matriz: numpy.ndarray - Matriz(mxn) escalonada.
-        """
-        matrix.data = np.multiply(matrix.data, scalar)
-
-    def add_scale(self, matrix: np.ndarray, scalar) -> np.ndarray:
-        """
-            Função que realiza a operação Elementwise de adição na matriz.
-
-            ---
-            Parametros:
-                * matrix: numpy.ndarray - Matriz(mxn).
-                * scalar: Integer or numpy.ndarray(mxn) - Escalar que sera adicionado.
-
-            ---
-            Retorno:
-                * Matriz: numpy.ndarray - Matriz(mxn) escalonada.
-        """
-        matrix.data = np.add(matrix.data, scalar)
-
-    def mat_mul(self, matrixA: np.ndarray, matrixB: np.ndarray) -> np.ndarray:
-        """
-            Função que realiza o produto matricial entre duas matrizes
-
-            ---
-            Parametros:
-                * matrixA: numpy.ndarray - Matriz(mxk)
-                * matrixB: numpy.ndarray - Matrix(kxn)
-
-            ---
-            Retorno:
-                * Matrix: numpy.ndarray - Matriz(mxn)
-        """
-        return np.matmul(matrixA.data, matrixB.data)
-
-    def transpose(self, matrix: np.ndarray) -> np.ndarray:
-        """
-            Função que realiza a transposição da matriz.
-
-            ---
-            Parametros:
-                * matrix: numpy.ndarray - Matriz(mxn).
-
-            ---
-            Retorno:
-                * matrix: numpy.ndarray - Matriz(nxm).
-        """
-        return matrix.data.T
-
     def randomize(self) -> None:
         """
             Função que preenche a matriz gerada com valores aleatórios entre -1 e 1
@@ -141,3 +65,127 @@ class matrix:
                 j += 1
             i += 1
         del i, j
+
+    @staticmethod
+    def from_array(arr: typing.List[float]) -> np.ndarray:
+        """
+            Função que converte um array em um numpy.ndarray.
+            Normalmente usada para receber inputs do usuário através de um array,
+            e converte em um numpy.ndarray de 1-d.
+
+            ---
+            Parametros:
+                * arr: List of float - Array que contem os dados.
+
+            ---
+            Retorno:
+                * Array: 1-d numpy.ndarray - Array convertido em um ndarray de 1-d.
+        """
+        array_converted = np.ndarray((1, len(arr)))
+
+        i = 0
+        while i < len(arr):
+            array_converted[0][i] = arr[i]
+            i += 1
+
+        del i
+        return array_converted.reshape((len(arr), 1))
+
+    @staticmethod
+    def to_array(arr: np.ndarray) -> typing.List[float]:
+        """
+            Função que converte um numpy.ndarray em uma List[float].
+            Normalmente usado para converter a saída da RNA em um array
+
+            ---
+            Parametros:
+                * arr: numpy.ndarray - Array que contem os dados.
+
+            ---
+            Retorno:
+                * Array: List[float] - Array convertido em uma lista de floats.
+        """
+        it = np.nditer(arr)
+        array_converted = []
+        for it in arr:
+            array_converted.append(it[0])
+
+        del it
+        return array_converted
+
+    @staticmethod
+    def mul_scale(matrix: np.ndarray, scalar) -> np.ndarray:
+        """
+            Função que realiza a operação Elementwise de multiplicação na matriz
+
+            ---
+            Parametros:
+                * matrix: numpy.ndarray - Matriz(nxm).
+                * scalar: Integer or numpy.ndarray - Escalar que a matriz será multiplicada.
+
+            ---
+            Retorno:
+                * Matriz: numpy.ndarray - Matriz(mxn) escalonada.
+        """
+        return np.multiply(matrix, scalar)
+
+    @staticmethod
+    def add_scale(matrix: np.ndarray, scalar) -> np.ndarray:
+        """
+            Função que realiza a operação Elementwise de adição na matriz.
+
+            ---
+            Parametros:
+                * matrix: numpy.ndarray - Matriz(mxn).
+                * scalar: Integer or numpy.ndarray(mxn) - Escalar que sera adicionado.
+
+            ---
+            Retorno:
+                * Matriz: numpy.ndarray - Matriz(mxn) escalonada.
+        """
+        return np.add(matrix, scalar)
+
+    @staticmethod
+    def mat_mul(matrixA: np.ndarray, matrixB: np.ndarray) -> np.ndarray:
+        """
+            Função que realiza o produto matricial entre duas matrizes
+
+            ---
+            Parametros:
+                * matrixA: numpy.ndarray - Matriz(mxk)
+                * matrixB: numpy.ndarray - Matrix(kxn)
+
+            ---
+            Retorno:
+                * Matrix: numpy.ndarray - Matriz(mxn)
+        """
+        return np.dot(matrixA, matrixB)
+
+    @staticmethod
+    def transpose(matrix: np.ndarray) -> np.ndarray:
+        """
+            Função que realiza a transposição da matriz.
+
+            ---
+            Parametros:
+                * matrix: numpy.ndarray - Matriz(mxn).
+
+            ---
+            Retorno:
+                * matrix: numpy.ndarray - Matriz(nxm).
+        """
+        return matrix.T
+
+    @staticmethod
+    def map_matrix(matrix: np.ndarray, func) -> np.ndarray:
+        i, j = 0, 0
+        rows, cols = matrix.shape[0], matrix.shape[1]
+        while i < rows:
+            j = 0
+            while j < cols:
+                aux = matrix[i][j]
+                matrix[i][j] = func(aux)
+                j += 1
+            i += 1
+        del i, j, rows, cols, aux
+        return matrix

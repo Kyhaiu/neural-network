@@ -8,10 +8,30 @@ class Main():
         pass
 
     def test(self):
-        matrix = mat.matrix(2, 3)
+        rna = nn.neural_network(3, 2, 2)
+        print('Number of nodes')
+        print('\tinput: ', rna.input_nodes,
+              '\thidden: ', rna.hidden_nodes,
+              '\toutput', rna.output_nodes)
 
-        matrix.add_scale(matrix.data, 3)
-        print(matrix.data)
+        print('Matrix of weights')
+        print('weights_ih: ')
+        print(rna.weights_ih.data)
+        print('weights_ho: ')
+        print(rna.weights_ho.data)
+        print('Bias')
+        print('Bias of Hiddens: ')
+        print(rna.bias_h.data)
+        print('Bias of Output: ')
+        print(rna.bias_o.data)
+
+        inpt = [1, 2, 3]
+        out = rna.feedfoward(inpt)
+        print("Input")
+        print(inpt)
+
+        print("Output:")
+        print(out)
 
 
 main = Main()
