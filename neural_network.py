@@ -22,14 +22,16 @@ class neural_network:
         self.weights_ih = mat.matrix(self.hidden_nodes, self.input_nodes)
         self.weights_ho = mat.matrix(self.output_nodes, self.hidden_nodes)
 
-        self.weights_ih.randomize()
-        self.weights_ho.randomize()
+        self.weights_ih.mat_randomize()
+        self.weights_ho.mat_randomize()
 
         self.bias_h = mat.matrix(self.hidden_nodes, 1)
         self.bias_o = mat.matrix(self.output_nodes, 1)
 
-        self.bias_h.randomize()
-        self.bias_o.randomize()
+        self.bias_h.mat_randomize()
+        self.bias_o.mat_randomize()
+
+        self.learning_rate = 0.1
 
     def __setattr__(self, name: str, value: typing.Any) -> None:
         """
@@ -57,10 +59,17 @@ class neural_network:
             super(neural_network, self).__setattr__(name, value)
         if name == 'bias_o':
             super(neural_network, self).__setattr__(name, value)
+        if name == 'learning_rate':
+            super(neural_network, self).__setattr__(name, value)
 
-    @staticmethod
     def sigmoid(x) -> float:
-        return (1/(1+math.exp(-x)))
+        try:
+            return (1/(1+math.exp(-x)))
+        except:
+            return (1/(1+math.exp(-709)))
+
+    def derivate_sigmoid(y) -> float:
+        return (y - (1 - y))
 
     def feedfoward(self, input_array: typing.List[float]):
         """
@@ -103,19 +112,111 @@ class neural_network:
         input_array = mat.matrix.from_array(input_array)
 
         # Step 1
-        hidden = mat.matrix.mat_mul(self.weights_ih.data, input_array)
-        hidden = mat.matrix.add_scale(hidden, self.bias_h.data)
+        hidden = mat.matrix.mat_mul_dotproduct(
+            self.weights_ih.data, input_array)
+        hidden = mat.matrix.mat_add_elementwise(
+            hidden, self.bias_h.data)
 
         # Step 2
-        hidden = mat.matrix.map_matrix(hidden, neural_network.sigmoid)
+        hidden = mat.matrix.mat_map(hidden, neural_network.sigmoid)
 
         # Step 3
-        output = mat.matrix.mat_mul(self.weights_ho.data, hidden)
-        output = mat.matrix.add_scale(output, self.bias_o.data)
+        output = mat.matrix.mat_mul_dotproduct(self.weights_ho.data, hidden)
+        output = mat.matrix.mat_add_elementwise(output, self.bias_o.data)
 
         # Step 4
-        output = mat.matrix.map_matrix(output, neural_network.sigmoid)
+        output = mat.matrix.mat_map(output, neural_network.sigmoid)
 
         del hidden
 
         return mat.matrix.to_array(output)
+
+    def train(self, input_array: typing.List[float], target_array: typing.List[float]):
+        """
+            Função que realiza o treino da rede neural.
+
+            Step-by-Step of Train:
+            ---
+
+            1. Obtém a a saída da rede neural com base nos inputs
+                    * Realiza a operação feedfoward
+
+            2. Calcula o erro absoluto da saída obtida, aplicando a operação E_mat = (T_mat - O_mat), onde:
+                    * E_mat -> Matriz que irá receber os erros absolutos.
+                    * T_mat -> Matriz que contem o gabarito das respostas esperadas.
+                    * O_mat -> Matriz que contem a saída da rede neural.
+
+            3. Calcula o Erro das camadas ocultas, aplicando a operação (W_ho_T•E_mat), onde:
+                    * W_ho_T -> Matriz dos pesos entre camada oculta e saída transposta.
+                    * E_mat  -> Matriz que contem os erros absolutos da rede neural.
+                    * •      -> Produto matricial.
+
+
+        """
+
+        # Step 1.
+        inputs = mat.matrix.from_array(input_array)
+
+        # Step 1.1 - Feedfoward
+        hiddens = mat.matrix.mat_mul_dotproduct(self.weights_ih.data, inputs)
+        hiddens = mat.matrix.mat_add_elementwise(hiddens, self.bias_h.data)
+
+        # Step 1.2 - Feedfoward
+        hiddens = mat.matrix.mat_map(hiddens, neural_network.sigmoid)
+
+        # Step 1.3 - Feedfoward
+        outputs = mat.matrix.mat_mul_dotproduct(self.weights_ho.data, hiddens)
+        outputs = mat.matrix.mat_add_elementwise(outputs, self.bias_o.data)
+
+        # Step 1.4 - Feedfoward
+        outputs = mat.matrix.mat_map(outputs, neural_network.sigmoid)
+
+        ########################
+
+        # Step 2.
+        targets = mat.matrix.from_array(target_array)
+
+        output_errors = mat.matrix.mat_sub_elementwise(targets, outputs)
+
+        # (outputs - (1 - outputs)) -> Derivada da função sigmoid
+        gradients = mat.matrix.mat_map(
+            outputs, neural_network.derivate_sigmoid)
+        gradients = mat.matrix.mat_mul_elementwise(gradients, output_errors)
+        gradients = mat.matrix.mat_mul_elementwise(
+            gradients, self.learning_rate)
+
+        hidden_T = mat.matrix.transpose(hiddens)
+        weights_ho_deltas = mat.matrix.mat_mul_dotproduct(gradients, hidden_T)
+
+        # Ajustando os pesos da camada oculta e saída pesos pelos deltas
+        self.weights_ho.data = mat.matrix.mat_add_elementwise(
+            self.weights_ho.data, weights_ho_deltas)
+        # Ajustando o bias do output pelos deltas (que no caso é o gradient)
+        self.bias_o.data = mat.matrix.mat_add_elementwise(
+            self.bias_o.data, gradients)
+
+        # Step 3.
+        weights_ho_transpose = mat.matrix.transpose(self.weights_ho.data)
+        hidden_errors = mat.matrix.mat_mul_dotproduct(
+            weights_ho_transpose, output_errors)
+
+        # Calcular o gradiente da camada oculta
+        hidden_gradients = mat.matrix.mat_map(
+            hiddens, neural_network.derivate_sigmoid)
+        hidden_gradients = mat.matrix.mat_mul_elementwise(
+            hidden_errors, hidden_errors)
+        hidden_gradients = mat.matrix.mat_mul_elementwise(
+            hidden_gradients, self.learning_rate)
+
+        # Calculate input->hidden deltas
+        inputs_T = mat.matrix.transpose(inputs)
+        weights_ih_deltas = mat.matrix.mat_mul_dotproduct(
+            hidden_gradients, inputs_T)
+
+        # Ajustando os pesos da camada de entrada e oculta pesos pelos deltas
+        self.weights_ih.data = mat.matrix.mat_add_elementwise(
+            self.weights_ih.data, weights_ih_deltas)
+        # Ajustando o bias do output pelos deltas (que no caso é o hidden_gradients)
+
+        self.bias_h.data = mat.matrix.mat_add_elementwise(
+            self.bias_h.data, hidden_gradients)

@@ -1,9 +1,5 @@
 import typing
-
 import numpy as np
-from random import uniform
-from numpy.core.fromnumeric import shape
-from numpy.matrixlib import mat
 
 
 class matrix:
@@ -44,7 +40,7 @@ class matrix:
         if name == 'data':
             super(matrix, self).__setattr__(name, value)
 
-    def randomize(self) -> None:
+    def mat_randomize(self) -> None:
         """
             Função que preenche a matriz gerada com valores aleatórios entre -1 e 1
 
@@ -61,7 +57,7 @@ class matrix:
         while i < self.rows:
             j = 0
             while j < self.cols:
-                self.data[i][j] = uniform(-1, 1)
+                self.data[i][j] = np.random.uniform(-1, 1)
                 j += 1
             i += 1
         del i, j
@@ -114,7 +110,39 @@ class matrix:
         return array_converted
 
     @staticmethod
-    def mul_scale(matrix: np.ndarray, scalar) -> np.ndarray:
+    def mat_add_elementwise(matrix: np.ndarray, scalar) -> np.ndarray:
+        """
+            Função que realiza a operação Elementwise de adição na matriz.
+
+            ---
+            Parametros:
+                * matrix: numpy.ndarray - Matriz(mxn).
+                * scalar: Integer or numpy.ndarray(mxn) - Escalar que sera adicionado.
+
+            ---
+            Retorno:
+                * Matriz: numpy.ndarray - Matriz.
+        """
+        return np.add(matrix, scalar)
+
+    @staticmethod
+    def mat_sub_elementwise(matrixA: np.ndarray, matrixB: np.ndarray) -> np.ndarray:
+        """
+            Função que realiza a operação Elementwise de subtração na matriz.
+
+            ---
+            Parametros:
+                * matrixA: numpy.ndarray - Matriz A
+                * matrixB: numpy.ndarray - Matriz B
+
+            ---
+            Retorno:
+                * Matriz: numpy.ndarray - Matriz C.
+        """
+        return np.subtract(matrixA, matrixB)
+
+    @staticmethod
+    def mat_mul_elementwise(matrix: np.ndarray, scalar) -> np.ndarray:
         """
             Função que realiza a operação Elementwise de multiplicação na matriz
 
@@ -130,23 +158,7 @@ class matrix:
         return np.multiply(matrix, scalar)
 
     @staticmethod
-    def add_scale(matrix: np.ndarray, scalar) -> np.ndarray:
-        """
-            Função que realiza a operação Elementwise de adição na matriz.
-
-            ---
-            Parametros:
-                * matrix: numpy.ndarray - Matriz(mxn).
-                * scalar: Integer or numpy.ndarray(mxn) - Escalar que sera adicionado.
-
-            ---
-            Retorno:
-                * Matriz: numpy.ndarray - Matriz(mxn) escalonada.
-        """
-        return np.add(matrix, scalar)
-
-    @staticmethod
-    def mat_mul(matrixA: np.ndarray, matrixB: np.ndarray) -> np.ndarray:
+    def mat_mul_dotproduct(matrixA: np.ndarray, matrixB: np.ndarray) -> np.ndarray:
         """
             Função que realiza o produto matricial entre duas matrizes
 
@@ -177,7 +189,7 @@ class matrix:
         return matrix.T
 
     @staticmethod
-    def map_matrix(matrix: np.ndarray, func) -> np.ndarray:
+    def mat_map(matrix: np.ndarray, func) -> np.ndarray:
         i, j = 0, 0
         rows, cols = matrix.shape[0], matrix.shape[1]
         while i < rows:
