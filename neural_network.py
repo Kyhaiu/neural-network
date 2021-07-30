@@ -60,7 +60,7 @@ class neural_network:
 
     @staticmethod
     def sigmoid(x) -> float:
-        return (1/math.exp(-x))
+        return (1/(1+math.exp(-x)))
 
     def feedfoward(self, input_array: typing.List[float]):
         """
