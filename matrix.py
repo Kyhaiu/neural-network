@@ -1,10 +1,9 @@
+from random import random
 import typing
-import numpy as np
 
 
-class matrix:
-
-    def __init__(self,  rows: int, cols: int) -> None:
+class Matrix:
+    def __init__(self, rows: int, cols: int):
         """
             Construtor da classe Matrix.
             Cria uma matriz(mxn) preenchida com valores 0.
@@ -12,192 +11,260 @@ class matrix:
             Parametros:
                 * rows: Integer - Numero de linhas da matriz.
                 * cols: Integer - Numero de colunas da matriz.
-
             ---
             Retorno:
-                Matriz: numpy.ndarray - Matriz gerada.
+                Matriz: List - Matriz gerada.
         """
         self.rows = rows
         self.cols = cols
-        self.data = np.zeros((rows, cols))
+        self.data = []
 
-    def __setattr__(self, name: str, value: typing.Any) -> None:
+        for i in range(self.rows):
+            self.data.append([])
+            for _ in range(self.cols):
+                self.data[i].append(0)
+
+    def __str__(self):
         """
-            Definição de atributos da classe Matrix
-
-            ---
-            Atributos:
-                * rows: Integer - Numero de linhas da matriz(m).
-                * cols: Integer - Numero de colunas da matriz(n).
-                * data: numpy.ndarray - Valores da matriz(mXn).
-
-            ---
+            String customizada da classe Matrix.
+            Usado para printar na tela objeto.data
         """
-        if name == 'rows':
-            super(matrix, self).__setattr__(name, value)
-        if name == 'cols':
-            super(matrix, self).__setattr__(name, value)
-        if name == 'data':
-            super(matrix, self).__setattr__(name, value)
+        return str(self.data)
 
-    def mat_randomize(self) -> None:
+    @staticmethod
+    def fromArray(arr: typing.List[float]):
+        """
+            Satic Method
+            ---
+
+            Função que converte um array em uma matriz.
+            Normalmente usada para receber inputs do usuário através de um array,
+            e converter em um matriz de 1-d.
+            ---
+            Parametros:
+                * arr: List of float - Array que contem os dados.
+            ---
+            Retorno:
+                * m: Matrix object - Matrix de 1-d convertida.
+        """
+        m = Matrix(len(arr), 1)
+        for i in range(len(arr)):
+            m.data[i][0] = arr[i]
+        return m
+
+    def toArray(self):
+        """
+            Função que converte um Matrix object em uma List[float].
+            Normalmente usado para converter a saída da RNA em um array
+            ---
+            Parametros:
+                * self: Matrix object - Matrix a ser convertida.
+            ---
+            Retorno:
+                * Array: List[float] - Array convertido em uma lista de floats.
+        """
+        arr = []
+        for i in range(self.rows):
+            for j in range(self.cols):
+                arr.append(self.data[i][j])
+        return arr
+
+    def randomize(self):
         """
             Função que preenche a matriz gerada com valores aleatórios entre -1 e 1
+            ---
+            Parametros:
+                * self: Matrix object - Matriz que será preenchida com valores aleatórios 
+            ---
+            Retorno:
+                * None - Não possui retorno pois trabalha com referencia.
+        """
+        for i in range(self.rows):
+            for j in range(self.cols):
+                r = random()
+                r = r if random() < 0.5 else r - 1
+                self.data[i][j] = r
+
+    @staticmethod
+    def subtract(a, b):
+        """
+            Static Method
+            ---
+
+            Função que realiza a operação Elementwise de subtração na matriz.
 
             ---
             Parametros:
-                * None - Não possui parametros.
+                * a: Matrix object - Matriz A
+                * b: Matrix object - Matriz B
+            ---
+            Retorno:
+                * return: Matrix object - Matriz C resultado da subtração Elementwise.
+        """
+        result = Matrix(a.rows, a.cols)
+        for i in range(a.rows):
+            for j in range(a.cols):
+                result.data[i][j] = a.data[i][j] - b.data[i][j]
+        return result
+
+    def add(self, n):
+        """
+            Função que realiza a operação Elementwise de adição na matriz.
+
+                * Se n é um instancia de Matrix object, então é realizado a operação soma das matrizes
+                * Se n é um int/float então é realizado a operação de adição elementwise do escalar
+
+            ---
+            Parametros:
+                * self: Matrix object - Matriz A.
+                * n   : Matrix object or int/float - Matriz B/Escalar que será somado a Matriz A
+            ---
+            Retorno:
+                * None - Não possui retorno pois trabalha com referencia.
+        """
+        if isinstance(n, Matrix):
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    self.data[i][j] += n.data[i][j]
+        else:
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    self.data[i][j] += n
+
+    @staticmethod
+    def transpose(matrix):
+        """
+            Static Method
+            ---
+
+            Função que realiza a transposição da matriz.
+
+            ---
+            Parametros:
+                * Matrix: Matrix object - Matriz(mxn).
+            ---
+            Retorno:
+                * return: Matrix object - Matriz(nxm).
+        """
+        result = Matrix(matrix.cols, matrix.rows)
+        for i in range(matrix.rows):
+            for j in range(matrix.cols):
+                result.data[j][i] = matrix.data[i][j]
+        return result
+
+    # Matrix Multiplication
+    @staticmethod
+    def multiply1(a, b):
+        """
+            Static Method
+            ---
+
+            Função que realiza a multiplicação entre duas matrizes.
+
+            ---
+            Parametros:
+                * a: matriz object - Matriz(mxn) A.
+                * b: matriz object - Matriz(nxm) B.
+            ---
+            Retorno:
+                * return: Matrix object - Matriz(mxn) C resultante da multiplicação.
+        """
+        if a.cols != b.rows:
+            print('Invalid Matrices!')
+            return
+
+        result = Matrix(a.rows, b.cols)
+
+        for i in range(result.rows):
+            for j in range(result.cols):
+                s = 0.0
+                for k in range(a.cols):
+                    s += a.data[i][k] * b.data[k][j]
+                result.data[i][j] = s
+        return result
+
+    def multiply2(self, n):
+        """
+            Função que realiza o produto escalar ou Hadamard product
+
+            ---
+            Parametros:
+                * self: Matrix object - Matrix A.
+                * n: Matrix object or int/float - Matriz B/Escalar
+
+            ---
+            Retorno:
+                * Se n é um Matrix object, então retorna o Hadamard Product na Matrix object que chamou o método.
+                * Se n é um escalar, então retorna o Produto escalar na Matrix object que chamou o método.
+        """
+        if isinstance(n, Matrix):
+            if self.rows != n.rows or self.cols != n.cols:
+                print('Invalid Matrices!')
+                return
+            # Hadamard Product
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    self.data[i][j] *= n.data[i][j]
+        else:
+            # Scalar Product
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    self.data[i][j] *= n
+
+    def map1(self, func):
+        """
+            Função que aplica uma função em todos os elementos da Matrix object.
+
+            ---
+            Parametros:
+                * self: Matrix object - Matriz que será aplicada a função
+                * func: function reference - Referencia da função que será aplicada.
 
             ---
             Retorno:
                 * None - Não possui retorno pois trabalha com referencia.
         """
-        i = 0
-        j = 0
-        while i < self.rows:
-            j = 0
-            while j < self.cols:
-                self.data[i][j] = np.random.uniform(-1, 1)
-                j += 1
-            i += 1
-        del i, j
+        for i in range(self.rows):
+            for j in range(self.cols):
+                self.data[i][j] = func(self.data[i][j])
 
     @staticmethod
-    def from_array(arr: typing.List[float]) -> np.ndarray:
+    def map2(m, func):
         """
-            Função que converte um array em um numpy.ndarray.
-            Normalmente usada para receber inputs do usuário através de um array,
-            e converte em um numpy.ndarray de 1-d.
+            Static Method
+            ---
+
+            Função que aplica uma função em todos os elementos da Matrix object.
 
             ---
             Parametros:
-                * arr: List of float - Array que contem os dados.
+                * m: Matrix object - Matriz que será aplicada a função
+                * func: function reference - Referencia da função que será aplicada.
 
             ---
             Retorno:
-                * Array: 1-d numpy.ndarray - Array convertido em um ndarray de 1-d.
+                * return: Matrix object - Matrix M com a função aplicada.
         """
-        array_converted = np.ndarray((1, len(arr)))
+        result = Matrix(m.rows, m.cols)
+        for i in range(result.rows):
+            for j in range(result.cols):
+                result.data[i][j] = func(m.data[i][j])
+        return result
 
-        i = 0
-        while i < len(arr):
-            array_converted[0][i] = arr[i]
-            i += 1
-
-        del i
-        return array_converted.reshape((len(arr), 1))
-
-    @staticmethod
-    def to_array(arr: np.ndarray) -> typing.List[float]:
+    def copy(self):
         """
-            Função que converte um numpy.ndarray em uma List[float].
-            Normalmente usado para converter a saída da RNA em um array
+            Função responsável por copiar os dados de uma Matrix object para outro Matrix object.
 
             ---
-            Parametros:
-                * arr: numpy.ndarray - Array que contem os dados.
+            Parametro:
+                * self: Matrix object - Matrix que chamou o método
 
             ---
             Retorno:
-                * Array: List[float] - Array convertido em uma lista de floats.
+                * return: Matrix object - Copia da Matrix object.
         """
-        it = np.nditer(arr)
-        array_converted = []
-        for it in arr:
-            array_converted.append(it[0])
-
-        del it
-        return array_converted
-
-    @staticmethod
-    def mat_add_elementwise(matrix: np.ndarray, scalar) -> np.ndarray:
-        """
-            Função que realiza a operação Elementwise de adição na matriz.
-
-            ---
-            Parametros:
-                * matrix: numpy.ndarray - Matriz(mxn).
-                * scalar: Integer or numpy.ndarray(mxn) - Escalar que sera adicionado.
-
-            ---
-            Retorno:
-                * Matriz: numpy.ndarray - Matriz.
-        """
-        return np.add(matrix, scalar)
-
-    @staticmethod
-    def mat_sub_elementwise(matrixA: np.ndarray, matrixB: np.ndarray) -> np.ndarray:
-        """
-            Função que realiza a operação Elementwise de subtração na matriz.
-
-            ---
-            Parametros:
-                * matrixA: numpy.ndarray - Matriz A
-                * matrixB: numpy.ndarray - Matriz B
-
-            ---
-            Retorno:
-                * Matriz: numpy.ndarray - Matriz C.
-        """
-        return np.subtract(matrixA, matrixB)
-
-    @staticmethod
-    def mat_mul_elementwise(matrix: np.ndarray, scalar) -> np.ndarray:
-        """
-            Função que realiza a operação Elementwise de multiplicação na matriz
-
-            ---
-            Parametros:
-                * matrix: numpy.ndarray - Matriz(nxm).
-                * scalar: Integer or numpy.ndarray - Escalar que a matriz será multiplicada.
-
-            ---
-            Retorno:
-                * Matriz: numpy.ndarray - Matriz(mxn) escalonada.
-        """
-        return np.multiply(matrix, scalar)
-
-    @staticmethod
-    def mat_mul_dotproduct(matrixA: np.ndarray, matrixB: np.ndarray) -> np.ndarray:
-        """
-            Função que realiza o produto matricial entre duas matrizes
-
-            ---
-            Parametros:
-                * matrixA: numpy.ndarray - Matriz(mxk)
-                * matrixB: numpy.ndarray - Matrix(kxn)
-
-            ---
-            Retorno:
-                * Matrix: numpy.ndarray - Matriz(mxn)
-        """
-        return np.dot(matrixA, matrixB)
-
-    @staticmethod
-    def transpose(matrix: np.ndarray) -> np.ndarray:
-        """
-            Função que realiza a transposição da matriz.
-
-            ---
-            Parametros:
-                * matrix: numpy.ndarray - Matriz(mxn).
-
-            ---
-            Retorno:
-                * matrix: numpy.ndarray - Matriz(nxm).
-        """
-        return matrix.T
-
-    @staticmethod
-    def mat_map(matrix: np.ndarray, func) -> np.ndarray:
-        i, j = 0, 0
-        rows, cols = matrix.shape[0], matrix.shape[1]
-        while i < rows:
-            j = 0
-            while j < cols:
-                aux = matrix[i][j]
-                matrix[i][j] = func(aux)
-                j += 1
-            i += 1
-        del i, j, rows, cols, aux
-        return matrix
+        m = Matrix(self.rows, self.cols)
+        for i in range(self.rows):
+            for j in range(self.cols):
+                m.data[i][j] = self.data[i][j]
+        return m

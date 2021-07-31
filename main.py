@@ -1,6 +1,6 @@
 import neural_network as nn
-import matrix as mat
 import random
+from sklearn.neural_network  import MLPClassifier
 
 
 class Main():
@@ -12,69 +12,28 @@ class Main():
         rna = nn.neural_network(2, 2, 1)
         training_data = [([0, 1], [1]), ([1, 0], [1]),
                          ([0, 0], [0]), ([1, 1], [0])]
-        i, j = 0, 0
+        i = 0
 
-        while i < 10000:
-            j = 0
-            while j < len(training_data):
-                data_learning = random.sample(training_data, 1)
-                rna.train(data_learning[0][0], data_learning[0][1])
-                j += 1
+        x_train, y_train = [], []
+
+        while i < 100000:
+            data_learning = random.sample(training_data, 1)
+            rna.train(data_learning[0][0], data_learning[0][1])
+            #x_train.append(data_learning[0][0])
+            #y_train.append(data_learning[0][1][0])
             i += 1
 
-        print("guess for [0,0]:", rna.feedfoward(training_data[0][0]))
-        print("guess for [0,1]:", rna.feedfoward(training_data[1][0]))
-        print("guess for [1,0]:", rna.feedfoward(training_data[2][0]))
-        print("guess for [1,1]:", rna.feedfoward(training_data[3][0]))
+        print("my rna guess for [0,0]:", rna.predict([0,0]))
+        print("my rna guess for [0,1]:", rna.predict([0,1]))
+        print("my rna guess for [1,0]:", rna.predict([1,0]))
+        print("my rna guess for [1,1]:", rna.predict([1,1]))
 
-        """print('Number of nodes')
-        print('\tinput: ', rna.input_nodes,
-              '\thidden: ', rna.hidden_nodes,
-              '\toutput', rna.output_nodes)
+        #mlp = MLPClassifier(hidden_layer_sizes=(2, 1), activation='logistic', learning_rate='constant', max_iter=1000)
+        #mlp.fit(x_train, y_train)
 
-        print('Matrix of weights')
-        print('weights_ih: ')
-        print(rna.weights_ih.data)
-        print('weights_ho: ')
-        print(rna.weights_ho.data)
-        print('Bias')
-        print('Bias of Hiddens: ')
-        print(rna.bias_h.data)
-        print('Bias of Output: ')
-        print(rna.bias_o.data)"""
+        #print(mlp.get_params)
+        #print("mlp guess:", mlp.predict([[0,0], [0,1], [1,0], [1,1]]))
 
 
 main = Main()
-i = 0
-while i < 10:
-    print("Instance ", i+1, " of RNA")
-    main.test()
-    i += 1
-
-
-"""
-rna = nn.neural_network(3, 2, 2)
-print('Number of nodes')
-Print('\tinput: ', rna.input_nodes,
-      '\thidden: ', rna.hidden_nodes,
-      '\toutput', rna.output_nodes)
-
-print('Matrix of weights')
-print('weights_ih: ')
-print(rna.weights_ih.data)
-print('weights_ho: ')
-print(rna.weights_ho.data)
-print('Bias')
-print('Bias of Hiddens: ')
-print(rna.bias_h.data)
-print('Bias of Output: ')
-print(rna.bias_o.data)
-
-inpt = [1, 2, 3]
-out = rna.feedfoward(inpt)
-print("Input")
-print(inpt)
-
-print("Output:")
-print(out)
-"""
+main.test()
