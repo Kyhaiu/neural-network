@@ -1,6 +1,13 @@
+import numpy as np
 import neural_network as nn
-import random
-from sklearn.neural_network  import MLPClassifier
+from sklearn.neural_network import MLPClassifier
+
+"""
+    Explicar o projeto de como treinar o PONG e ver se ta dentro das especificações
+
+    Para ajustar o bias estou utilizado o erro médio, já que só temos 1 output. Isso pode?
+    ou tenho que treinar elemento a elemento e ir ajustando o bias?
+"""
 
 
 class Main():
@@ -10,29 +17,21 @@ class Main():
 
     def test(self):
         rna = nn.neural_network(2, 2, 1)
-        training_data = [([0, 1], [1]), ([1, 0], [1]),
-                         ([0, 0], [0]), ([1, 1], [0])]
-        i = 0
-
         x_train, y_train = [], []
+        x_train = [[0, 0], [0, 1], [1, 0], [1, 1]]
+        y_train = [0, 1, 1, 0]
+        
+        rna.train(x_train, y_train, 3500)
 
-        while i < 100000:
-            data_learning = random.sample(training_data, 1)
-            rna.train(data_learning[0][0], data_learning[0][1])
-            #x_train.append(data_learning[0][0])
-            #y_train.append(data_learning[0][1][0])
-            i += 1
+        print("my rna guess for [0,0]:", nn.to_array(rna.predict([0,0])))
+        print("my rna guess for [0,1]:", nn.to_array(rna.predict([0,1])))
+        print("my rna guess for [1,0]:", nn.to_array(rna.predict([1,0])))
+        print("my rna guess for [1,1]:", nn.to_array(rna.predict([1,1])))
 
-        print("my rna guess for [0,0]:", rna.predict([0,0]))
-        print("my rna guess for [0,1]:", rna.predict([0,1]))
-        print("my rna guess for [1,0]:", rna.predict([1,0]))
-        print("my rna guess for [1,1]:", rna.predict([1,1]))
+        mlp = MLPClassifier(hidden_layer_sizes=(2, 1), activation='logistic', learning_rate='constant', max_iter=3500)
+        mlp.fit(x_train, y_train)
 
-        #mlp = MLPClassifier(hidden_layer_sizes=(2, 1), activation='logistic', learning_rate='constant', max_iter=1000)
-        #mlp.fit(x_train, y_train)
-
-        #print(mlp.get_params)
-        #print("mlp guess:", mlp.predict([[0,0], [0,1], [1,0], [1,1]]))
+        print("mlp guess:", mlp.predict([[0,0], [0,1], [1,0], [1,1]]))
 
 
 main = Main()
