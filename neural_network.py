@@ -80,7 +80,7 @@ def to_array(arr: np.ndarray) -> typing.List[float]:
 
 
 class neural_network:
-    def __init__(self, input_nodes, hidden_nodes: int = 0, output_nodes: int = 0):
+    def __init__(self, input_nodes, hidden: typing.Tuple[int, int]=(1, 2), output_nodes: int = 0, learning_rate=0.1):
         """
             Constructor Method
             ---
@@ -106,16 +106,36 @@ class neural_network:
                 * bias_o       : numpy.ndarray      - Matriz com os Bias da camada de saída.
                 * learning_rate: float, Default=0.1 - Indice de aprendizagem da RNA.
         """
+        
+        hidden_layers = hidden[0]
+        hidden_nodes = hidden[1]
+
         self.input_nodes = input_nodes
+        self.hidden_layers = hidden_layers
         self.hidden_nodes = hidden_nodes
         self.output_nodes = output_nodes
-        self.weights_ih = np.random.rand(input_nodes, hidden_nodes)
-        self.weights_ho = np.random.rand(hidden_nodes, output_nodes)
+
         
-        self.bias_h = np.random.rand(hidden_nodes, 1)
+
+        weights_hh = []
+        for i in range(hidden_layers+1):          
+            if i == 0:
+                self.weights_ih = np.random.rand(input_nodes, hidden_nodes)
+            elif i == hidden_layers:
+                self.weights_ho = np.random.rand(hidden_nodes, output_nodes)
+            else:
+                weights_hh.append(np.random.rand(hidden_nodes, hidden_nodes))
+
+        self.weights_hh = weights_hh
+        
+        bias = []
+        for i in range(hidden_layers):
+            bias.append(np.random.rand(hidden_nodes, 1))
+
+        self.bias_h = bias
         self.bias_o = np.random.rand(output_nodes, 1)
         
-        self.learning_rate = 0.1
+        self.learning_rate = learning_rate
 
     def predict(self, input_array: np.ndarray):
         """
@@ -150,8 +170,24 @@ class neural_network:
             ---
                 * return: numpy.ndarray - Array com as predições da rede neural. 
         """
-        self.hidden = sigmoid(np.dot(input_array, self.weights_ih) + self.bias_h.T)
-        outputs = sigmoid(np.dot(self.hidden, self.weights_ho) + self.bias_o)
+        hiddens = []
+        if self.hidden_layers ==  1:
+            hiddens.append(sigmoid(np.dot(input_array, self.weights_ih) + self.bias_h[0].T))
+            outputs = sigmoid(np.dot(hiddens[-1], self.weights_ho) + self.bias_o)
+        
+        elif self.hidden_layers == 2:
+            
+            hiddens.append(sigmoid(np.dot(input_array, self.weights_ih) + self.bias_h[0].T))
+            hiddens.append(sigmoid(np.dot(hiddens[-1], self.weights_hh[0]) + self.bias_h[1].T))
+            outputs = sigmoid(np.dot(hiddens[-1], self.weights_ho) + self.bias_o)
+        else:
+            hiddens.append(sigmoid(np.dot(input_array, self.weights_ih) + self.bias_h[0].T))
+            for i in range(len(self.weights_hh-1)):
+                hiddens.append(np.dot(hiddens[-1], self.weights_hh[i]) + self.bias_h[i+1].T)
+            outputs = sigmoid(np.dot(hiddens[-1], self.weights_ho) + self.bias_o)
+
+        self.hiddens = hiddens
+
 
         return outputs
 
@@ -213,18 +249,37 @@ class neural_network:
             mean_gradients = np.mean(gradients)
 
             # Calculado a nova matriz de pessos associada entre a oculta e saída
-            weights_ho = np.dot(self.hidden.T, errors_ho)
+            weights_ho = np.dot(self.hiddens[-1].T, errors_ho)
 
             # Ajustado o bias pelos deltas (que no caso é apenas o gradiente)
             self.bias_o = self.bias_o + mean_gradients
 
+            weights_hh = []
+            if self.hidden_layers == 2:
+                errors_hh = (2 * (targets_array - outputs) * sigmoid_derivate(outputs))
+                errors_hh = np.dot(errors_hh, self.weights_ho.T) * sigmoid_derivate(self.hiddens[-1])
+
+                weights_hh.append(np.dot(self.hiddens[0].T,  errors_hh))
+                # gradient = derivada de sigmoid nos outputs * erro;
+                # Calculate gradient
+                gradients = sigmoid_derivate(self.hiddens[-1])
+                gradients = gradients * errors_hh[0]
+                gradients = gradients * self.learning_rate
+                # Como o treinamento é realizado com um conjunto > 1, então é pegado a média dos erros.
+                mean_gradients = np.mean(gradients)
+                self.bias_h[-1] = self.bias_h[-1] + mean_gradients
+
+            elif self.hidden_layers > 2:
+                pass
+
+
             # Calcula o erro da camada de entrada e da camada oculta.
-            errors_ih = (2 * (targets_array - outputs) * sigmoid_derivate(outputs))  
-            errors_ih = np.dot(errors_ih, self.weights_ho.T) * sigmoid_derivate(self.hidden)
+            errors_ih = (2 * (targets_array - outputs) * sigmoid_derivate(outputs))
+            errors_ih = np.dot(errors_ih, self.weights_ho.T) * sigmoid_derivate(self.hiddens[0])
 
             # gradient = derivada de sigmoid nos outputs * erro;
             # Calculate gradient
-            gradients = sigmoid_derivate(self.hidden)
+            gradients = sigmoid_derivate(self.hiddens[0])
             gradients = gradients * errors_ih
             gradients = gradients * self.learning_rate
             # Como o treinamento é realizado com um conjunto > 1, então é pegado a média dos erros.
@@ -234,10 +289,12 @@ class neural_network:
             weights_ih = np.dot(inputs_array.T,  errors_ih)
 
             # Ajustado o bias pelos deltas (que no caso é apenas o gradiente)
-            self.bias_h = self.bias_h + mean_gradients
+            self.bias_h[0] = self.bias_h[0] + mean_gradients
 
             # Atualiza as matrizes de pesos com as derivadas (declive) da função de perda
             self.weights_ih += weights_ih
+            for i in range(len(weights_hh)):
+                self.weights_hh[i] += weights_hh[i]
             self.weights_ho += weights_ho
 
     def mutate(self, rate: float):

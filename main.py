@@ -16,7 +16,7 @@ class Main():
         pass
 
     def test(self):
-        rna = nn.neural_network(2, 2, 1)
+        rna = nn.neural_network(2, (2, 4), 1)
         x_train, y_train = [], []
         x_train = [[0, 0], [0, 1], [1, 0], [1, 1]]
         y_train = [0, 1, 1, 0]
@@ -28,10 +28,10 @@ class Main():
         print("my rna guess for [1,0]:", nn.to_array(rna.predict([1,0])))
         print("my rna guess for [1,1]:", nn.to_array(rna.predict([1,1])))
 
-        mlp = MLPClassifier(hidden_layer_sizes=(2, 1), activation='logistic', learning_rate='constant', max_iter=3500)
-        mlp.fit(x_train, y_train)
+        #mlp = MLPClassifier(hidden_layer_sizes=(2, 2), activation='logistic', learning_rate='constant', max_iter=50000)
+        #mlp.fit(x_train, y_train)
 
-        print("mlp guess:", mlp.predict([[0,0], [0,1], [1,0], [1,1]]))
+        #print("mlp guess:", mlp.predict([[0,0], [0,1], [1,0], [1,1]]))
 
 
 main = Main()
