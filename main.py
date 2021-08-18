@@ -1,7 +1,12 @@
 import cv2
 import os
 import numpy as np
+import keras.backend as kb
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from keras.utils.np_utils import to_categorical
+from keras.models import Sequential, load_model
+from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense
 
 
 path = './data'
@@ -75,8 +80,63 @@ x_train, x_test, y_train, y_test = train_test_split(xtotal, ytotal, test_size=0.
 x_train = x_train.reshape(x_train.shape[0], 28, 28)
 x_test = x_test.reshape(x_test.shape[0], 28, 28)
 
+encoder = LabelEncoder()
+encoded_y_train = encoder.fit_transform(y_train)
+y_train_categorical = to_categorical(encoded_y_train)
+
+encoded_y_test = encoder.fit_transform(y_test)
+y_test_categorical = to_categorical(encoded_y_test)
+
+
+def create_rna(num_classes, input_shape):
+    rna = Sequential()
+    rna.add(Conv2D(30, (5, 5), input_shape=input_shape, activation='relu'))
+    rna.add(MaxPooling2D())
+    rna.add(Conv2D(15, (3, 3), activation='relu'))
+    rna.add(MaxPooling2D())
+    rna.add(Dropout(0.2))
+    rna.add(Flatten())
+    rna.add(Dense(128, activation='relu'))
+    rna.add(Dense(50, activation='relu'))
+    rna.add(Dense(num_classes, activation='softmax'))
+
+    rna.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+    return rna
+
+# Número de classes
+number_class = len(label_map)
+
 # Tamanho das imagens do dataset
 width = height = 28
+
+depth = 1
+
+if kb.image_data_format == 'channels_first':
+    input_shape = (depth, width, height)
+    train_features = x_train.reshape(x_train.shape[0], depth, width, height).astype('float32')
+    test_features = x_test.reshape(x_test.shape[0], depth, width, height).astype('float32')
+else:
+    input_shape = (width, height, depth)
+    train_features = x_train.reshape(x_train.shape[0], width, height, depth).astype('float32')
+    test_features = x_test.reshape(x_test.shape[0], width, height, depth).astype('float32')
+
+train_labels = y_train_categorical
+test_labels = y_test_categorical
+
+try:
+    print("Carregando RNA...")
+    rna = load_model('./Model/rede_neural.tf')
+except:
+    print("Não existe RNA, Criando uma nova...")
+
+    rna = create_rna(number_class, input_shape)
+    rna.fit(train_features, train_labels, batch_size=100, epochs=3)
+    rna.save('./Model/rede_neural.tf')
+
+eval_results = rna.evaluate(test_features, test_labels)
+print('Loss: ', eval_results[0], 'Accuracy: ', eval_results[1])
+
 
 #Variaveis globais usadas para desenhar na tela.
 drawing = False
@@ -116,6 +176,17 @@ def draw(event, x, y, flags, param) :
         last_x = None
         last_y = None
 
+def reshape_for_prediction(arr, w, h, d) :
+    # reshape to (num_of_samples, width, height, depth (or channels)) or (num_of_samples, depth (or channels) width, height)
+    # according to the configuration
+    # and convert from 0-255 range to 0-1 range
+    if kb.image_data_format == 'channels_first' :
+        return arr.reshape((1,d,w,h)).astype('float32') / 255
+    else :
+        return arr.reshape((1,w,h,d)).astype('float32') / 255
+
+
+
 # Instanciação dos canvas (Telas)
 draw_img = np.zeros((300,300,3), np.uint8)
 pred_img = np.zeros((100,300,3), np.uint8)
@@ -129,6 +200,24 @@ while(1) :
     # show images on their windows
     cv2.imshow('drawing', draw_img)
     cv2.imshow('prediction', pred_img)
+    
+     # copy the image on the 'drawing' window and use it to predict
+    img_to_pred = draw_img.copy()
+    img_to_pred = cv2.cvtColor(img_to_pred, cv2.COLOR_BGR2GRAY) # convert BGR to grayscale image
+    img_to_pred = cv2.resize(img_to_pred, (width,height)) # resize to a width x height image
+    
+    # reshape to a suitable shape for the model and convert values from 0-255 range to 0-1 range
+    img_to_pred = reshape_for_prediction(img_to_pred, width, height, depth)
+    
+    # predict the image
+    prediction = rna.predict(img_to_pred)
+    prediction = np.argmax(prediction, axis=1)
+
+    pred_img.fill(0)
+
+
+    if draw_img.any() :
+        cv2.putText(pred_img, str(label_map[int(prediction)]), (10,70), font, 1.5, (255,255,255), 2, cv2.LINE_AA)
 
     #Captura a tecla após 20 ns
     k = cv2.waitKey(20)
