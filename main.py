@@ -1,3 +1,4 @@
+import sys
 import cv2
 import os
 import numpy as np
@@ -124,10 +125,25 @@ else:
 train_labels = y_train_categorical
 test_labels = y_test_categorical
 
-try:
-    print("Carregando RNA...")
-    rna = load_model('./Model/rede_neural.tf')
-except:
+if os.listdir('./Model'):
+    print('RNA encontrada.')
+    keypress = input('Gostaria de treinar uma nova RNA? (Y/n) ')
+    if keypress == 'n' or keypress == 'N':
+        print("Carregando RNA...")
+        rna = load_model('./Model/rede_neural.tf')
+    elif keypress == "" or keypress == "Y" or keypress == "y":
+        print("Treinando uma nova RNA...")
+
+        rna = create_rna(number_class, input_shape)
+        rna.fit(train_features, train_labels, batch_size=100, epochs=3)
+        rna.save('./Model/rede_neural.tf')
+    else:
+        print("Resposta inválida.")
+        print("Respostas válidas: [Y-y-enter/N-n]")
+        print("Encerrando Programa...")
+        print("Liberando Memoria...")
+        sys.exit()
+else:
     print("Não existe RNA, Criando uma nova...")
 
     rna = create_rna(number_class, input_shape)
@@ -180,10 +196,14 @@ def reshape_for_prediction(arr, w, h, d) :
     # reshape to (num_of_samples, width, height, depth (or channels)) or (num_of_samples, depth (or channels) width, height)
     # according to the configuration
     # and convert from 0-255 range to 0-1 range
+
+    # faz o reshape da imagem para a predição de acordo com a configuração channels_first ou channels_last do Keras
+    # Divide por 255 para tranforma os ranges de 0-255 para 0-1
+    # Obs.: a transformação de 0-1 é opcional, mas aumenta a chance de acerto na hora da predição.
     if kb.image_data_format == 'channels_first' :
-        return arr.reshape((1,d,w,h)).astype('float32') / 255
+        return arr.reshape((1,d,w,h)).astype('float32')
     else :
-        return arr.reshape((1,w,h,d)).astype('float32') / 255
+        return arr.reshape((1,w,h,d)).astype('float32')
 
 
 
