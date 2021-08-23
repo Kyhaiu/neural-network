@@ -193,17 +193,13 @@ def draw(event, x, y, flags, param) :
         last_y = None
 
 def reshape_for_prediction(arr, w, h, d) :
-    # reshape to (num_of_samples, width, height, depth (or channels)) or (num_of_samples, depth (or channels) width, height)
-    # according to the configuration
-    # and convert from 0-255 range to 0-1 range
-
     # faz o reshape da imagem para a predição de acordo com a configuração channels_first ou channels_last do Keras
-    # Divide por 255 para tranforma os ranges de 0-255 para 0-1
-    # Obs.: a transformação de 0-1 é opcional, mas aumenta a chance de acerto na hora da predição.
+    # Divide por 255 para tranformar os ranges de 0-255 para 0-1
+    # Obs.: a transformação de 0-1 é opcional, mas facilita na hora da predição.
     if kb.image_data_format == 'channels_first' :
-        return arr.reshape((1,d,w,h)).astype('float32')
+        return arr.reshape((1,d,w,h)).astype('float32')/255
     else :
-        return arr.reshape((1,w,h,d)).astype('float32')
+        return arr.reshape((1,w,h,d)).astype('float32')/255
 
 
 
@@ -217,25 +213,26 @@ cv2.setMouseCallback('drawing', draw)
 font = cv2.FONT_HERSHEY_SIMPLEX
 
 while(1) :
-    # show images on their windows
+    # exibe as imagens desenhadas nas telas.
     cv2.imshow('drawing', draw_img)
     cv2.imshow('prediction', pred_img)
     
      # copy the image on the 'drawing' window and use it to predict
+     # copia a imagem da tela de desenhor e utiliza ela para predição.
     img_to_pred = draw_img.copy()
-    img_to_pred = cv2.cvtColor(img_to_pred, cv2.COLOR_BGR2GRAY) # convert BGR to grayscale image
-    img_to_pred = cv2.resize(img_to_pred, (width,height)) # resize to a width x height image
+    img_to_pred = cv2.cvtColor(img_to_pred, cv2.COLOR_BGR2GRAY) # converte ela de RGB para gray scale
+    img_to_pred = cv2.resize(img_to_pred, (width,height)) # redimensiona a imagem para o tamanho width x height
     
-    # reshape to a suitable shape for the model and convert values from 0-255 range to 0-1 range
+    # redimenciona a imagem para o tamanho definido e faz um escalonamento de 0-255 para 0-1
     img_to_pred = reshape_for_prediction(img_to_pred, width, height, depth)
     
-    # predict the image
+    # tenta predizer a imagem gerada.
     prediction = rna.predict(img_to_pred)
     prediction = np.argmax(prediction, axis=1)
 
     pred_img.fill(0)
 
-
+    # Escreve o resultado da predição.
     if draw_img.any() :
         cv2.putText(pred_img, str(label_map[int(prediction)]), (10,70), font, 1.5, (255,255,255), 2, cv2.LINE_AA)
 
