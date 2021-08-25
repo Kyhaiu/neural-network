@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from keras.utils.np_utils import to_categorical
 from keras.models import Sequential, load_model
-from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense
+from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense, Input
 
 
 path = './data'
@@ -91,12 +91,10 @@ y_test_categorical = to_categorical(encoded_y_test)
 
 def create_rna(num_classes, input_shape):
     rna = Sequential()
-    rna.add(Conv2D(30, (5, 5), input_shape=input_shape, activation='relu'))
-    rna.add(MaxPooling2D())
-    rna.add(Conv2D(15, (3, 3), activation='relu'))
-    rna.add(MaxPooling2D())
-    rna.add(Dropout(0.2))
+    
+    rna.add(Input(input_shape))
     rna.add(Flatten())
+    rna.add(Dense(128, activation='relu'))
     rna.add(Dense(128, activation='relu'))
     rna.add(Dense(50, activation='relu'))
     rna.add(Dense(num_classes, activation='softmax'))
@@ -135,6 +133,7 @@ if os.listdir('./Model'):
         print("Treinando uma nova RNA...")
 
         rna = create_rna(number_class, input_shape)
+        print(train_features.shape)
         rna.fit(train_features, train_labels, batch_size=100, epochs=3)
         rna.save('./Model/rede_neural.tf')
     else:
