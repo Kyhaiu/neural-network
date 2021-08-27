@@ -21,7 +21,7 @@ filenames = os.listdir(path)
 
 # O Dataset terá no max 200000 elementos.
 # O numero de max de cada elementos de um conjunto será a média no max.
-slice_train = int(200000/len(filenames))
+slice_train = int(200000/(len(filenames)/2))
 
 # Seed usada para embaralhar os dados antes de dividir
 seed = np.random.randint(1, 10e7)
