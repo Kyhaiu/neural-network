@@ -5,9 +5,10 @@ import numpy as np
 import keras.backend as kb
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import confusion_matrix
 from keras.utils.np_utils import to_categorical
 from keras.models import Sequential, load_model
-from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense, Input
+from keras.layers import Flatten, Dense, Input
 
 
 path = './data'
@@ -148,7 +149,6 @@ if os.listdir('./Model'):
         print("Treinando uma nova RNA...")
 
         rna = create_rna(number_class, input_shape, 3, 64)
-        print(train_features.shape)
         rna.fit(train_features, train_labels, batch_size=100, epochs=3)
         rna.save('./Model/rede_neural.tf')
     else:
@@ -166,6 +166,30 @@ else:
 
 eval_results = rna.evaluate(test_features, test_labels)
 print('Loss: ', eval_results[0], 'Accuracy: ', eval_results[1])
+
+pred = rna.predict(test_features)
+
+# Deleção de variaveis não mais utilizadas, para liberar memoria
+del x_train, y_train, x_test, y_test, encoded_y_train, encoded_y_test, xtotal, ytotal 
+
+i = 0
+y_true = []
+y_pred = []
+
+# Processo de obter a classe predita, com base no conjunto de teste
+while i < len(pred):
+    y_pred.append(np.argmax(pred[i], axis=0))
+    y_true.append(np.argmax(test_labels[i], axis=0))
+    i += 1
+
+del pred, test_features, test_labels, 
+
+# Obter a matrix de confusão com base nos conjuntos de teste.
+# 0 - Banana
+# 1 - Cloud
+# 2 - Moon
+print('Confusion Matrix: ')
+print(confusion_matrix(y_true, y_pred))
 
 
 #Variaveis globais usadas para desenhar na tela.
