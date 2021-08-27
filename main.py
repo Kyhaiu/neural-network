@@ -26,8 +26,8 @@ slice_train = int(200000/len(filenames))
 # Seed usada para embaralhar os dados antes de dividir
 seed = np.random.randint(1, 10e7)
 
-# Mapa de labels dos conjuntos
-label_map = {} # maps integer values of labels to their corresponding strings
+# Mapa de rótulos dos conjuntos
+label_map = {}
 
 i = 0
 for fname in filenames :
@@ -42,7 +42,7 @@ for fname in filenames :
     x = x.astype('float32') / 255 
     label_name = fname.split('.npy')[0]
 
-    # Replica obtida para em um vetor com o mesmo numero de elementos que tem em x.
+    # Replica o rotúlo obtido em um vetor com o mesmo numero de elementos que tem em x.
     y = [str(label_name)] * len(x)
     
     # Adiciona a label para o map de labels.
@@ -81,6 +81,7 @@ x_train, x_test, y_train, y_test = train_test_split(xtotal, ytotal, test_size=0.
 x_train = x_train.reshape(x_train.shape[0], 28, 28)
 x_test = x_test.reshape(x_test.shape[0], 28, 28)
 
+# Processo de transformar os rótulos obtidos em numeros.
 encoder = LabelEncoder()
 encoded_y_train = encoder.fit_transform(y_train)
 y_train_categorical = to_categorical(encoded_y_train)
@@ -89,14 +90,29 @@ encoded_y_test = encoder.fit_transform(y_test)
 y_test_categorical = to_categorical(encoded_y_test)
 
 
-def create_rna(num_classes, input_shape):
+def create_rna(num_classes, input_shape, num_hiddens=3, num_neurons=64):
+    """
+        Função responsável por criar uma rede neural artificial.
+        
+        Parametros:
+        ---
+            - num_classes: Integer - Numero de classes que a rede neural deve classificar.
+            - input_shape: Tuple of Integers - Tupla que contem dois numeros inteiros que correspondem ao formato dos dados que a rede neural irá receber como entrada.
+            - num_hiddens: Integer - Numero de camdas ocultas que a rede neural terá (Camdas de entrada e saída não são consideradas neste numero.).
+            - num_neurons: Integer - Numero de neurônios que as camadas ocultas terão.
+        
+        ---
+        Retorno:
+        ---
+            - RNA: `tf.keras.Model` - Rede neural artificial.
+    """
     rna = Sequential()
-    
     rna.add(Input(input_shape))
     rna.add(Flatten())
-    rna.add(Dense(128, activation='relu'))
-    rna.add(Dense(128, activation='relu'))
-    rna.add(Dense(50, activation='relu'))
+
+    for i in range(num_hiddens):
+        rna.add(Dense(num_neurons, activation='relu'))
+
     rna.add(Dense(num_classes, activation='softmax'))
 
     rna.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -109,20 +125,19 @@ number_class = len(label_map)
 # Tamanho das imagens do dataset
 width = height = 28
 
+# Profundiade dos dados.
 depth = 1
 
-if kb.image_data_format == 'channels_first':
-    input_shape = (depth, width, height)
-    train_features = x_train.reshape(x_train.shape[0], depth, width, height).astype('float32')
-    test_features = x_test.reshape(x_test.shape[0], depth, width, height).astype('float32')
-else:
-    input_shape = (width, height, depth)
-    train_features = x_train.reshape(x_train.shape[0], width, height, depth).astype('float32')
-    test_features = x_test.reshape(x_test.shape[0], width, height, depth).astype('float32')
+input_shape = (depth, width, height)
+# O Keras necessita da informação depth, pois se não o shape dos dados ficaria (None, width, height), causando um erro no backend do keras.
+# Não entendo o por que ele precisa da profundidade, mas se não colocar da erro. :\/
+train_features = x_train.reshape(x_train.shape[0], depth, width, height).astype('float32')
+test_features = x_test.reshape(x_test.shape[0], depth, width, height).astype('float32')
 
 train_labels = y_train_categorical
 test_labels = y_test_categorical
 
+# Menu de navegação do programa.
 if os.listdir('./Model'):
     print('RNA encontrada.')
     keypress = input('Gostaria de treinar uma nova RNA? (Y/n) ')
@@ -132,7 +147,7 @@ if os.listdir('./Model'):
     elif keypress == "" or keypress == "Y" or keypress == "y":
         print("Treinando uma nova RNA...")
 
-        rna = create_rna(number_class, input_shape)
+        rna = create_rna(number_class, input_shape, 3, 64)
         print(train_features.shape)
         rna.fit(train_features, train_labels, batch_size=100, epochs=3)
         rna.save('./Model/rede_neural.tf')
@@ -145,7 +160,7 @@ if os.listdir('./Model'):
 else:
     print("Não existe RNA, Criando uma nova...")
 
-    rna = create_rna(number_class, input_shape)
+    rna = create_rna(number_class, input_shape, 3, 64)
     rna.fit(train_features, train_labels, batch_size=100, epochs=3)
     rna.save('./Model/rede_neural.tf')
 
@@ -216,8 +231,7 @@ while(1) :
     cv2.imshow('drawing', draw_img)
     cv2.imshow('prediction', pred_img)
     
-     # copy the image on the 'drawing' window and use it to predict
-     # copia a imagem da tela de desenhor e utiliza ela para predição.
+     # copia a imagem da tela de desenho e utiliza ela para predição.
     img_to_pred = draw_img.copy()
     img_to_pred = cv2.cvtColor(img_to_pred, cv2.COLOR_BGR2GRAY) # converte ela de RGB para gray scale
     img_to_pred = cv2.resize(img_to_pred, (width,height)) # redimensiona a imagem para o tamanho width x height
