@@ -78,7 +78,7 @@ for fname in filenames :
 # 42 pq é a resposta sobre a vida, o universo e tudo mais...
 x_train, x_test, y_train, y_test = train_test_split(xtotal, ytotal, test_size=0.2, random_state=42)
 
-# Realiza o reshape dos conjuntos de teste.
+# Realiza o reshape dos conjuntos de teste. De (N, 748) => (N, 28, 28), onde N é o numero de elementos de treino(80% do conjunto total).
 # Todos os desenhos simplificados, foram rendenizados em uma matrix 28x28 em grayscale bitmap no formato .npy
 # Código aplicado na geração dos arquivos https://github.com/googlecreativelab/quickdraw-dataset/issues/19#issuecomment-402247262
 x_train = x_train.reshape(x_train.shape[0], 28, 28)
@@ -169,14 +169,13 @@ else:
 eval_results = rna.evaluate(test_features, test_labels)
 print('Loss: ', eval_results[0], 'Accuracy: ', eval_results[1])
 
-pred = rna.predict(test_features)
-
 # Deleção de variaveis não mais utilizadas, para liberar memoria
 del x_train, y_train, x_test, y_test, encoded_y_train, encoded_y_test, xtotal, ytotal 
 
 i = 0
 y_true = []
 y_pred = []
+pred = rna.predict(test_features)
 
 # Processo de obter a classe predita, com base no conjunto de teste
 while i < len(pred):
