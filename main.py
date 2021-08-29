@@ -21,7 +21,8 @@ ytotal = []
 filenames = os.listdir(path)
 
 # O Dataset terá no max 200000 elementos.
-# O numero de max de cada elementos de um conjunto será a média no max.
+# O numero max de cada elementos de um conjunto será a média no max.
+# A divisão por 2 é que na lista de filenames estão sendo considerados os .rar
 slice_train = int(200000/(len(filenames)/2))
 
 # Seed usada para embaralhar os dados antes de dividir
@@ -40,7 +41,8 @@ for fname in filenames :
     x = np.load(path + '/' +fname)
     
     # realiza uma escala nos dados de 0-255 para 0-1
-    x = x.astype('float32') / 255 
+    x = x.astype('float32') / 255
+    # Pega o nome do conjunto(nome indicado pelo nome do aquivo)
     label_name = fname.split('.npy')[0]
 
     # Replica o rotúlo obtido em um vetor com o mesmo numero de elementos que tem em x.
@@ -98,7 +100,7 @@ def create_rna(num_classes, input_shape, num_hiddens=3, num_neurons=64):
         Parametros:
         ---
             - num_classes: Integer - Numero de classes que a rede neural deve classificar.
-            - input_shape: Tuple of Integers - Tupla que contem dois numeros inteiros que correspondem ao formato dos dados que a rede neural irá receber como entrada.
+            - input_shape: Tuple of Integers - Tupla que contem 3 numeros inteiros que correspondem ao formato dos dados que a rede neural irá receber como entrada.
             - num_hiddens: Integer - Numero de camdas ocultas que a rede neural terá (Camdas de entrada e saída não são consideradas neste numero.).
             - num_neurons: Integer - Numero de neurônios que as camadas ocultas terão.
         
