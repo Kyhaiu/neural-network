@@ -232,13 +232,25 @@ def draw(event, x, y, flags, param) :
         last_y = None
 
 def reshape_for_prediction(arr, w, h, d) :
-    # faz o reshape da imagem para a predição de acordo com a configuração channels_first ou channels_last do Keras
+    """
+        Função que realiza o reshape da imagem para a predição da rede neural.
+
+        Parametros:
+        ---
+
+            - arr: Matriz que contem o desenho feito no canvas do opencv.
+            - w: Largura que a nova matriz terá.
+            - h: Altura que a nova matriz terá.
+            - d: profundiade que a nova matriz terá.
+        
+        Retorno:
+        ---
+            - Matriz redimencionada e convertida para uma imagem binária.
+    """
+    
     # Divide por 255 para tranformar os ranges de 0-255 para 0-1
     # Obs.: a transformação de 0-1 é opcional, mas facilita na hora da predição.
-    if kb.image_data_format == 'channels_first' :
-        return arr.reshape((1,d,w,h)).astype('float32')/255
-    else :
-        return arr.reshape((1,w,h,d)).astype('float32')/255
+    return arr.reshape((1,d,w,h)).astype('float32')/255
 
 
 
