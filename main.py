@@ -186,9 +186,11 @@ while i < len(pred):
 del pred, test_features, test_labels, 
 
 # Obter a matrix de confusão com base nos conjuntos de teste.
-# 0 - Banana
-# 1 - Cloud
-# 2 - Moon
+# Ordem da matriz é de acordo com a ordem alfabética da pasta /data.
+# 0 - Axe
+# 1 - Banana
+# 2 - Fork
+# 3 - Moon
 print('Confusion Matrix: ')
 print(confusion_matrix(y_true, y_pred))
 
