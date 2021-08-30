@@ -12,6 +12,11 @@ or
   py main.py
 ```
 
+**commands:**
+
+`ESC` to close  
+`c` to clean the canvas
+
 **to get new datasets:** access [Quick, Draw! - Get the Data](https://console.cloud.google.com/storage/browser/quickdraw_dataset/full/numpy_bitmap;tab=objects?prefix=&forceOnObjectsSortingFiltering=false). Download the chosen dataset, cut and paste in the **/data** folder.
 
 **Inspired in [Quick, Draw!](https://quickdraw.withgoogle.com/)**
